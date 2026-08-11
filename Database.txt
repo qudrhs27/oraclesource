@@ -1,0 +1,25 @@
+Database : 데이터 저장
+ 테이블 형태로 저장 : RDBMS
+ DBMS : 오라클 회사(오라클, MySQL)
+
+
+오라클 DBMS 설치 : 데이터베이스 서버
+ 오라클 서버 종류 : Enterprise Edition / Standard Edition / Express Edition(XE)
+
+DB 서버에서 데이터 다루는 언어 : SQL
+1)DD(Definition)L 2)DM(Manipulation)L 3)DC(Control)L
+
+개발자에게 중요한 부분 : DML(CRUD)
+C : insert => DB 서버에 데이터 삽입
+R : read => DB 서버에서 데이터 읽기
+   1) 조인 2) 서브쿼리
+U : update => DB 서버에 있는 데이터 수정
+D : delete => DB 서버에서 데이터 삭제
+
+SQL Plus : 오라클 데이터베이스 서버랑 접속시 사용하는 프로그램
+DBeaver : 데이터베이스 서버랑 접속시 사용하는 GUI 프로그램
+
+system / 비밀번호 : 관리자 계정
+
+사용자명 sys as sysdba
+비밀번호 : 엔터
