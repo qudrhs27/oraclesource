@@ -602,3 +602,344 @@ SELECT
 	END AS CHG_MGR
 FROM
 	EMP e;
+
+
+
+
+-- 다중행 함수
+-- sum(), avg(), count(), max(), min()
+
+-- 추가 수당 총계
+SELECT sum(e.COMM)
+FROM EMP e;
+
+-- 급여 총계
+SELECT sum(e.SAL), sum(DISTINCT e.SAL), sum (ALL e.SAL)
+FROM EMP e;
+
+
+-- 개수
+SELECT
+	count(e.COMM),
+	count(*),
+	count(e.SAL),
+	count(DISTINCT e.SAL),
+	count(ALL e.SAL)
+FROM
+	EMP e;
+
+
+-- 최대값, 최소값
+SELECT max(e.SAL), min(e.SAL)
+FROM EMP e;
+
+-- 10번 부서의 최고급여와 최저급여 조회
+SELECT max(e.SAL), min(e.SAL)
+FROM EMP e
+WHERE e.DEPTNO = 10;
+
+SELECT max(e.HIREDATE), min(e.HIREDATE)
+FROM EMP e;
+
+
+-- 평균
+SELECT
+	avg(e.SAL),
+	avg(DISTINCT e.SAL),
+	avg(ALL e.SAL)
+FROM
+	EMP e;
+
+-- SQL Error [937] [42000]: ORA-00937: 단일 그룹의 그룹 함수가 아닙니다
+SELECT e.EMPNO, sum(e.COMM)
+FROM EMP e;
+
+
+-- 결과값을 원하는 열로 묶어 출력 : group by
+
+-- 부서별 급여 평균 구하기
+SELECT
+	e.DEPTNO,
+	avg(e.SAL)
+FROM
+	EMP e
+GROUP BY
+	e.DEPTNO;
+
+-- 부서별,직책별 급여 평균 구하기
+SELECT
+	e.DEPTNO,
+	e.JOB,
+	avg(e.SAL)
+FROM
+	EMP e
+GROUP BY
+	e.DEPTNO,
+	e.JOB
+ORDER BY
+	e.DEPTNO,
+	e.JOB;
+
+
+-- group by ~~ having
+-- where 절에 그룹함수 사용 불가
+-- having : 만든 그룹을 조건별로 출력할 때 사용
+-- where 절과 having 이 존재 시 where 가 먼저 실행 됨
+
+-- SQL Error [934] [42000]: ORA-00934: 그룹 함수는 허가되지 않습니다
+SELECT
+	e.DEPTNO,
+	e.JOB,
+	avg(e.SAL)
+FROM
+	EMP e
+WHERE
+	avg(e.SAL) > 200
+GROUP BY
+	e.DEPTNO,
+	e.JOB;
+
+-- 부서별, 직책별 급여 평균 구하기(단, 급여가 2000 이상인 평균그룹만 출력)
+SELECT
+	e.DEPTNO,
+	e.JOB,
+	avg(e.SAL)
+FROM
+	EMP e
+GROUP BY
+	e.DEPTNO,
+	e.JOB
+HAVING
+	avg(e.SAL) >= 200
+ORDER BY
+	e.DEPTNO, e.JOB;
+
+
+-- 급여가 3000 이하인 직원들의 부서별,직책별 급여 평균 구하기(단, 급여가 2000 이상인 평균그룹만 출력)
+SELECT
+	e.DEPTNO,
+	e.JOB,
+	avg(e.SAL)
+FROM
+	EMP e
+WHERE
+	e.SAL <= 3000
+GROUP BY
+	e.DEPTNO,
+	e.JOB
+HAVING
+	avg(e.SAL) >= 2000
+ORDER BY
+	e.DEPTNO, e.JOB;
+
+
+-- 같은 직책에 종사하는 사원이 3명 이상인 직책과 인원 수를 출력
+-- MANAGER 3
+SELECT
+	e.JOB,
+	count(*)
+FROM
+	EMP e
+GROUP BY
+	e.JOB
+HAVING
+	count(e.JOB) >= 3;
+	
+
+-- 사원들의 입사연도를 기준으로 부서별로 몇명이 입사했는지 출력
+-- 입사연도 to_char()
+-- 1981 10 1
+SELECT to_char(e.HIREDATE, 'YYYY') , e.DEPTNO , count(*)
+FROM EMP e 
+GROUP BY to_char(e.HIREDATE, 'YYYY') , e.DEPTNO;
+
+
+-- 데이터베이스 설계
+-- 데이터를 효율적으로 저장하고 관리하기 위해 테이블의 구조를 미리 정하는 것
+
+-- 조인 : 여러 테이블을 하나의 테이블처럼 사용
+-- 1) 내부조인(INNER JOIN)
+-- 2) 외부조인(OUTER JOIN)
+--    - LEFT OUTER JOIN
+--    - RIGHT OUTER JOIN
+--    - FULL OUTER JOIN
+
+-- 48행
+SELECT *
+FROM EMP e, DEPT d
+WHERE e.DEPTNO = d.DEPTNO
+ORDER BY e.EMPNO;
+
+-- (INNER) JOIN ~ ON
+-- 두 개의 테이블에서 일치한 정보(등가조인)를 기준으로 특정 열 가져오기
+SELECT
+	e.EMPNO , e.ENAME , e.DEPTNO , d.DNAME , d.LOC 
+FROM
+	EMP e
+JOIN DEPT d
+ON
+	e.DEPTNO = d.DEPTNO
+ORDER BY
+	e.EMPNO;
+
+-- 비등가 조인
+-- EMP + SALGRADE
+-- SAL 800 => 700 ~ 1200 => GRADE 추출
+
+SELECT *
+FROM EMP e, SALGRADE s
+WHERE e.SAL BETWEEN s.LOSAL AND s.HISAL
+ORDER BY e.EMPNO;
+
+
+SELECT
+	e.EMPNO , e.ENAME , e.SAL , s.GRADE 
+FROM
+	EMP e
+INNER JOIN SALGRADE s
+ON
+	e.SAL BETWEEN s.LOSAL AND s.HISAL
+ORDER BY
+	e.EMPNO;
+
+
+-- SELF JOIN
+-- 자체 조인
+SELECT e.EMPNO , e.ENAME , e.MGR , e2.ENAME
+FROM EMP e, EMP e2
+WHERE e.MGR = e2.EMPNO
+ORDER BY e.EMPNO;
+
+
+-- 열의 정의가 애매합니다
+SELECT
+	e.EMPNO ,
+	e.ENAME ,
+	e.MGR ,
+	e2.ENAME
+FROM
+	EMP e
+JOIN EMP e2
+ON
+	e.MGR = e2.EMPNO
+ORDER BY
+	e.EMPNO;
+
+
+-- 외부조인 : 일치하지 않는 정보 가져오기(단, 왼쪽테이블 기준? 오른쪽테이블 기준)
+-- LEFT OUTER JOIN (왼쪽 외부 조인)
+SELECT e.EMPNO , e.ENAME , e.MGR , e2.ENAME
+FROM EMP e, EMP e2
+WHERE e.MGR = e2.EMPNO(+)
+ORDER BY e.EMPNO;
+
+-- RIGHT OUTER JOIN (오른쪽 외부 조인)
+SELECT e.EMPNO , e.ENAME , e.MGR , e2.ENAME
+FROM EMP e, EMP e2
+WHERE e.MGR(+) = e2.EMPNO
+ORDER BY e.EMPNO;
+
+
+-- LEFT (OUTER) JOIN / RIGHT (OUTER) JOIN
+
+SELECT
+	e.EMPNO ,
+	e.ENAME ,
+	e.MGR ,
+	e2.ENAME
+FROM
+	EMP e
+LEFT JOIN EMP e2
+ON
+	e.MGR = e2.EMPNO
+ORDER BY
+	e.EMPNO;
+
+
+SELECT
+	e.EMPNO ,
+	e.ENAME ,
+	e.MGR ,
+	e2.ENAME
+FROM
+	EMP e
+RIGHT JOIN EMP e2
+ON
+	e.MGR = e2.EMPNO
+ORDER BY
+	e.EMPNO;
+
+
+SELECT
+	e.EMPNO ,
+	e.ENAME ,
+	e.MGR ,
+	e2.ENAME
+FROM
+	EMP e
+FULL JOIN EMP e2
+ON
+	e.MGR = e2.EMPNO
+ORDER BY
+	e.EMPNO;
+
+
+-- 사원,부서 정보 출력(단, 급여가 2000초과인 사원만)
+SELECT
+	e.EMPNO ,
+	e.ENAME ,
+	e.DEPTNO ,
+	d.DNAME ,
+	d.LOC
+FROM
+	EMP e
+JOIN DEPT d
+ON
+	e.DEPTNO = d.DEPTNO
+WHERE
+	e.SAL > 2000
+ORDER BY
+	e.EMPNO;
+
+
+
+-- 서브쿼리
+--SELECT
+--FROM EMP e
+--WHERE e.EMPNO = (SELECT FROM EMP e)
+
+-- 왼쪽 메인쿼리  오른쪽 (서브쿼리)
+
+-- 단일행 서브 쿼리
+-- =, >=, <, <=, <>, ^=, !=
+
+-- jones의 급여보다 높은 급여를 받는 사원 조회
+SELECT * FROM EMP e WHERE e.SAL > (SELECT e2.SAL FROM EMP e2 WHERE e2.ENAME = 'JONES');
+
+-- WARD 의 입사일보다 빨리 입사한 사원 조회
+SELECT * FROM EMP e WHERE e.HIREDATE < (SELECT e2.HIREDATE FROM EMP e2 WHERE e2.ENAME = 'WARD');
+
+-- 20번 부서에 속한 사원 중 전체 사원의 평균급여보다 높은 급여를 받는 사원 조회
+-- 부서정보(부서명,위치) 조회
+SELECT
+	e.EMPNO ,
+	e.ENAME ,
+	e.JOB ,
+	e.SAL ,
+	d.DNAME ,
+	d.LOC 
+FROM
+	EMP e
+JOIN DEPT d ON
+	e.DEPTNO = d.DEPTNO
+WHERE
+	e.DEPTNO = 20
+	AND e.SAL > (
+	SELECT
+		avg(e2.SAL)
+	FROM
+		EMP e2);
+
+
+-- 단일 행 하위 질의에 2개 이상의 행이 리턴되었습니다.
+SELECT * FROM EMP e WHERE e.SAL > (SELECT e2.SAL FROM EMP e2 WHERE e2.JOB = 'MANAGER');

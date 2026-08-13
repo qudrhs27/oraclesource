@@ -151,3 +151,123 @@ WHERE
 SELECT e.EMPLOYEE_ID , e.FIRST_NAME  || ' ' || e.LAST_NAME, ADD_MONTHS(e.HIRE_DATE, 120)
 FROM EMPLOYEES e;
 
+
+
+-- 회사 내의 최대연봉 및 최소연봉 차이를 조회(SAL_GAP)
+SELECT MAX(e.SALARY) - min(e.SALARY) AS SAL_GAP
+FROM EMPLOYEES e;
+
+
+-- 매니저로 근무하는 사원들의 총 수 조회(매니저수)
+SELECT count(DISTINCT e.MANAGER_ID) AS "매니저수"
+FROM EMPLOYEES e;
+
+
+-- 부서별 급여의 평균 연봉 출력(평균은 반올림)
+-- 부서번호, 평균
+SELECT e.DEPARTMENT_ID , round(avg(e.SALARY))
+FROM EMPLOYEES e
+GROUP BY e.DEPARTMENT_ID
+ORDER BY e.DEPARTMENT_ID;
+
+
+-- 동일한 직업을 가진 사원들의 총 수를 출력
+-- 부서번호, job_id
+SELECT e.DEPARTMENT_ID, count(*)
+FROM EMPLOYEES e
+GROUP BY e.DEPARTMENT_ID , e.JOB_ID
+ORDER BY e.DEPARTMENT_ID , e.JOB_ID;
+
+
+-- 매니저가 없는 사원들은 제외하고 매니저가 관리하는 사원들 중에서 최소 급여를 받는 사원들 출력
+-- 단, 매니저가 관리하는 사원들 중에서 연봉이 6000 미만인 사원 제외
+SELECT e.MANAGER_ID , min(e.SALARY) 
+FROM EMPLOYEES e
+WHERE e.MANAGER_ID IS NOT NULL
+GROUP BY e.MANAGER_ID
+HAVING min(e.SALARY) >= 6000;
+
+
+-- 실행순서
+-- from -> where -> group by -> having -> select -> order by -> 최종결과에서 N 개 가져오기
+
+
+-- 자신의 담당 매니저의 입사일보다 빠른 입사자 찾기
+-- SELF JOIN
+SELECT
+	e.EMPLOYEE_ID AS 사번,
+	e.FIRST_NAME AS 이름,
+	e.MANAGER_ID AS 매니저아이디,
+	e.HIRE_DATE AS 내입사일,
+	m.FIRST_NAME AS 매니저명,
+	m.HIRE_DATE AS 매니저입사일
+FROM
+	EMPLOYEES e
+JOIN EMPLOYEES m
+ON
+	e.MANAGER_ID = m.EMPLOYEE_ID
+WHERE
+	e.HIRE_DATE < m.HIRE_DATE;
+	
+
+
+
+-- 위치 아이디가 1700인 사원들의 LAST_NAME, DEPARTMENT_ID, SALARY 조회
+-- E,D
+SELECT
+	e.LAST_NAME ,
+	e.DEPARTMENT_ID ,
+	e.SALARY
+FROM
+	EMPLOYEES e
+JOIN DEPARTMENTS d
+ON 
+	e.DEPARTMENT_ID = d.DEPARTMENT_ID
+WHERE d.LOCATION_ID = 1700;
+
+
+
+-- Executive 부서에 근무하는 모든 사원들의 부서번호, LAST_NAME, DEPARTMENT_ID, SALARY,JOB_IB 조회
+SELECT
+	e.DEPARTMENT_ID ,
+	e.LAST_NAME ,
+	e.DEPARTMENT_ID ,
+	e.SALARY ,
+	e.JOB_ID 
+FROM
+	EMPLOYEES e
+JOIN DEPARTMENTS d
+ON 
+	e.DEPARTMENT_ID = d.DEPARTMENT_ID
+WHERE d.DEPARTMENT_NAME = 'Executive';
+	
+
+
+-- 각 사원별 소속부서에서 자신보다 늦게 고용되었으나 더 많은 연봉을 받는 사원이 존재하는 사원정보 조회
+-- 사번, 이름(FI + LAS)
+SELECT
+	DISTINCT
+	e1.EMPLOYEE_ID ,
+	e1.FIRST_NAME || ' ' || e1.LAST_NAME
+FROM
+	EMPLOYEES e1
+JOIN EMPLOYEES e2 
+ON 
+	e1.EMPLOYEE_ID = e2.EMPLOYEE_ID
+WHERE
+	e1.HIRE_DATE < e2.HIRE_DATE
+	AND e1.SALARY < e2.SALARY;
+ 
+
+
+-- 도시 이름이 T로 시작하는 지역에 사는 사원들의 사번,LAST_NAME,부서번호
+SELECT
+	e.EMPLOYEE_ID , e.LAST_NAME , e.DEPARTMENT_ID, l.CITY 
+FROM
+	DEPARTMENTS d
+JOIN EMPLOYEES e ON
+	d.DEPARTMENT_ID = e.DEPARTMENT_ID
+JOIN LOCATIONS l ON
+	d.LOCATION_ID = l.LOCATION_ID
+WHERE
+	l.CITY LIKE 'T%';
