@@ -271,3 +271,86 @@ JOIN LOCATIONS l ON
 	d.LOCATION_ID = l.LOCATION_ID
 WHERE
 	l.CITY LIKE 'T%';
+
+
+-- 서브쿼리
+-- JOB_ID가 'SA_MAN'인 사원들의 최대 연봉보다 높게 받는 사원들의 정보 조회
+-- 사원번호,LAST_NAME,JOB_ID,SALARY 조회
+SELECT e.EMPLOYEE_ID , e.LAST_NAME , e.JOB_ID , e.SALARY
+FROM EMPLOYEES e 
+WHERE e.SALARY > (SELECT max(e2.SALARY) FROM EMPLOYEES e2 WHERE e2.JOB_ID = 'SA_MAN');
+
+
+-- 커미션을 받는 사원들의 부서와 연봉이 동일한 사원들의 정보 조회
+-- 사원번호,LAST_NAME,JOB_ID,SALARY,부서번호 조회
+SELECT e.EMPLOYEE_ID , e.LAST_NAME , e.JOB_ID , e.SALARY
+FROM EMPLOYEES e
+WHERE (e.DEPARTMENT_ID e.SALARY) IN (SELECT e2.DEPARTMENT_ID, e2.SALARY FROM EMPLOYEES e2 WHERE e2.COMMISSION_PCT IS NOT NULL);
+
+
+-- from 절 서브쿼리
+-- 회사 전체 평균 연봉보다 더 받는 사원들 중 LAST_NAME에 u가 들어있는 사원들이 근무하는 부서에서
+-- 커미션을 받는 사원들의 부서와 연봉이 동일한 사원들의 정보 조회
+-- 사원번호,LAST_NAME,JOB_ID,SALARY 조회
+SELECT
+	e.EMPLOYEE_ID ,
+	e.LAST_NAME ,
+	e.JOB_ID ,
+	e.SALARY
+FROM
+	EMPLOYEES e,
+	(
+	SELECT
+		DISTINCT e2.DEPARTMENT_ID
+	FROM
+		employees e2
+	WHERE
+		e2.SALARY >
+		(
+		SELECT
+			round(avg(e3.SALARY))
+		FROM
+			EMPLOYEES e3)
+		AND e2.LAST_NAME LIKE '%u%') dept
+WHERE
+	e.DEPARTMENT_ID = dept.DEPARTMENT_ID;
+
+
+
+-- 위치 id가 1700인 사원들의 급여,커미션 추출 후 추출된 사원들의 급여와 커미션이 동일한 사원 정보 조회
+-- 사원번호,FIRST_NAME + LAST_NAME,SALARY 조회
+SELECT
+	e.EMPLOYEE_ID ,
+	e.FIRST_NAME || ' ' || e.LAST_NAME ,
+	e.DEPARTMENT_ID ,
+	e.SALARY
+FROM
+	EMPLOYEES e
+WHERE
+	(e.SALARY,
+	NVL(e.COMMISSION_PCT, 0)) IN (
+	SELECT
+		e2.SALARY,
+		NVL(e2.COMMISSION_PCT, 0)
+	FROM
+		EMPLOYEES e2
+	JOIN DEPARTMENTS d ON
+		e2.DEPARTMENT_ID = d.DEPARTMENT_ID
+	WHERE
+		d.LOCATION_ID = 1700
+);
+
+
+-- 스칼라서브쿼리 사용
+-- 총 사원수 및 각 년도별로 고용된 사원들의 총 숫자 조회
+-- 총사원수 2011입사자 2012입사자...
+SELECT (SELECT count(*) FROM EMPLOYEES e) AS 총사원수,
+(SELECT count(*) FROM EMPLOYEES e WHERE to_char(e.HIRE_DATE, 'YYYY') = '2011') AS "2011입사자",
+(SELECT count(*) FROM EMPLOYEES e WHERE to_char(e.HIRE_DATE, 'YYYY') = '2012') AS "2012입사자",
+(SELECT count(*) FROM EMPLOYEES e WHERE to_char(e.HIRE_DATE, 'YYYY') = '2013') AS "2013입사자",
+(SELECT count(*) FROM EMPLOYEES e WHERE to_char(e.HIRE_DATE, 'YYYY') = '2014') AS "2014입사자",
+(SELECT count(*) FROM EMPLOYEES e WHERE to_char(e.HIRE_DATE, 'YYYY') = '2015') AS "2015입사자",
+(SELECT count(*) FROM EMPLOYEES e WHERE to_char(e.HIRE_DATE, 'YYYY') = '2016') AS "2016입사자",
+(SELECT count(*) FROM EMPLOYEES e WHERE to_char(e.HIRE_DATE, 'YYYY') = '2017') AS "2017입사자",
+(SELECT count(*) FROM EMPLOYEES e WHERE to_char(e.HIRE_DATE, 'YYYY') = '2018') AS "2018입사자"
+FROM EMPLOYEES e;
